@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="th" x-data="mediaPlayer()" class="bg-black text-white">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Media Fullscreen Player</title>
+    <script
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+      defer
+    ></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+
+  <body class="overflow-hidden h-screen w-screen">
+    <!-- Input Box -->
+    <form
+      x-show="!mediaSrc"
+      @submit.prevent="playMedia"
+      class="absolute z-10 top-4 left-1/2 transform -translate-x-1/2 bg-black/70 backdrop-blur px-4 py-3 rounded-lg flex items-center gap-2"
+    >
+      <input
+        type="text"
+        x-model="input"
+        placeholder="YouTube ID หรือ URL ของภาพ/วิดีโอ"
+        class="px-3 py-2 rounded bg-white text-black w-96"
+        required
+      />
+      <button
+        type="submit"
+        class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white"
+      >
+        แสดงสื่อ
+      </button>
+    </form>
+
+    <!-- Media Display -->
+    <div
+      class="fixed inset-0 bg-black overflow-hidden flex items-center justify-center"
+    >
+      <!-- YouTube -->
+      <template x-if="mediaType === 'youtube'">
+        <iframe
+          :src="mediaSrc"
+          allow="autoplay; fullscreen; encrypted-media"
+          allowfullscreen
+          class="absolute top-0 left-0 w-screen h-screen border-none"
+        ></iframe>
+      </template>
+
+      <!-- Image -->
+      <template x-if="mediaType === 'image'">
+        <img
+          :src="mediaSrc"
+          class="object-contain w-screen h-screen"
+          alt="media"
+        />
+      </template>
+
+      <!-- Video -->
+      <template x-if="mediaType === 'video'">
+        <video
+          :src="mediaSrc"
+          autoplay
+          muted
+          loop
+          playsinline
+          class="absolute top-0 left-0 w-screen h-screen object-cover"
+        ></video>
+      </template>
+    </div>
+
+    <script>
+      function mediaPlayer() {
+        return {
+          input: "",
+          mediaSrc: "",
+          mediaType: "",
+
+          playMedia() {
+            const value = this.input.trim();
+
+            // ตรวจสอบประเภท media
+            const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(value);
+            const isVideo = /\.(mp4|webm|ogg)$/i.test(value);
+            const isYouTubeId = /^[\w-]{11}$/.test(value);
+
+            if (isImage) {
+              this.mediaType = "image";
+              this.mediaSrc = value;
+            } else if (isVideo) {
+              this.mediaType = "video";
+              this.mediaSrc = value;
+            } else if (isYouTubeId) {
+              this.mediaType = "youtube";
+              this.mediaSrc = `https://www.youtube.com/embed/${value}?autoplay=1&mute=1&rel=0&controls=0&showinfo=0&modestbranding=1&playsinline=1`;
+            } else {
+              alert(
+                "กรุณาใส่ลิงก์ .jpg, .png, .gif, .mp4 หรือ YouTube Video ID เท่านั้น"
+              );
+            }
+          },
+        };
+      }
+    </script>
+  </body>
+</html>

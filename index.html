@@ -1,5 +1,10 @@
 <!DOCTYPE html>
-<html lang="th" x-data="mediaPlayer()" class="bg-black text-white">
+<html
+  lang="th"
+  x-data="mediaPlayer()"
+  x-init="initFromURL()"
+  class="bg-black text-white"
+>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -77,26 +82,50 @@
           mediaType: "",
 
           playMedia() {
-            const value = this.input.trim();
+            this.detectMediaType(this.input);
+          },
 
-            // ตรวจสอบประเภท media
-            const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(value);
-            const isVideo = /\.(mp4|webm|ogg)$/i.test(value);
-            const isYouTubeId = /^[\w-]{11}$/.test(value);
+          detectMediaType(value) {
+            const trimmed = value.trim();
+            const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(trimmed);
+            const isVideo = /\.(mp4|webm|ogg)$/i.test(trimmed);
+            const youTubeIdRegex = /^[\w-]{11}$/;
+            const youTubeUrlRegex =
+              /(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})/;
 
             if (isImage) {
               this.mediaType = "image";
-              this.mediaSrc = value;
+              this.mediaSrc = trimmed;
             } else if (isVideo) {
               this.mediaType = "video";
-              this.mediaSrc = value;
-            } else if (isYouTubeId) {
+              this.mediaSrc = trimmed;
+            } else if (youTubeIdRegex.test(trimmed)) {
+              // กรณีเป็น ID ตรงๆ
               this.mediaType = "youtube";
-              this.mediaSrc = `https://www.youtube.com/embed/${value}?autoplay=1&mute=1&rel=0&controls=0&showinfo=0&modestbranding=1&playsinline=1`;
+              this.mediaSrc = this.buildYouTubeEmbed(trimmed);
+            } else if (youTubeUrlRegex.test(trimmed)) {
+              // แยก ID จากลิงก์ YouTube
+              const match = trimmed.match(youTubeUrlRegex);
+              const videoId = match[1];
+              this.mediaType = "youtube";
+              this.mediaSrc = this.buildYouTubeEmbed(videoId);
             } else {
               alert(
-                "กรุณาใส่ลิงก์ .jpg, .png, .gif, .mp4 หรือ YouTube Video ID เท่านั้น"
+                "กรุณาใส่ลิงก์ .jpg, .png, .gif, .mp4 หรือ YouTube ID/URL เท่านั้น"
               );
+            }
+          },
+
+          buildYouTubeEmbed(id) {
+            return `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&rel=0&controls=0&showinfo=0&modestbranding=1&playsinline=1`;
+          },
+
+          initFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            const mediaParam = params.get("media");
+            if (mediaParam) {
+              this.input = mediaParam;
+              this.playMedia();
             }
           },
         };
